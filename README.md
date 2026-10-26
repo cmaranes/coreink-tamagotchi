@@ -1,5 +1,7 @@
 # CoreInk Tamagotchi
 
+[![CI](https://github.com/cmaranes/coreink-tamagotchi/actions/workflows/ci.yml/badge.svg)](https://github.com/cmaranes/coreink-tamagotchi/actions/workflows/ci.yml)
+
 A classic virtual pet for the **M5Stack CoreInk (K048)**, a 1.54" 200×200 e-ink ESP32 board, written in C++ with PlatformIO and M5Unified. The pet is a little green Grogu-style foundling and the UI is in **Spanish**. The same code also builds as a **PC simulator**, so you can play and tune it without the hardware.
 
 > Unofficial fan project, see the [disclaimer](#license-and-disclaimer).
