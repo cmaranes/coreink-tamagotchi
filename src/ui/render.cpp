@@ -344,8 +344,8 @@ void drawHome(M5Canvas& c, const View& v) {
 
   if (v.poweredOff) {
     c.drawFastHLine(0, kMenuY, kWidth, INK);
-    text(c, "pulsa el botón lateral", kWidth / 2, kMenuY + 12, 1, top_center);
-    text(c, "para despertarme", kWidth / 2, kMenuY + 26, 1, top_center);
+    text(c, "pulsa el dial o el botón", kWidth / 2, kMenuY + 12, 1, top_center);
+    text(c, "superior para despertarme", kWidth / 2, kMenuY + 26, 1, top_center);
   } else {
     drawMenu(c, v);
   }
