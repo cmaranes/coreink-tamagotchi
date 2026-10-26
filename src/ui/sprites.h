@@ -614,6 +614,21 @@ constexpr const char* kIconAlbum[] = {
     "............",
 };
 
+constexpr const char* kIconLanguage[] = {
+    "............",
+    "....####....",
+    "..##.##.##..",
+    ".#..#..#..#.",
+    ".##########.",
+    "#...#..#...#",
+    "#...#..#...#",
+    ".##########.",
+    ".#..#..#..#.",
+    "..##.##.##..",
+    "....####....",
+    "............",
+};
+
 constexpr const char* kIconArrowUp[] = {
     ".....##.....",
     "....####....",
@@ -861,6 +876,7 @@ SPRITE(kIconScold, 12, 12)
 SPRITE(kIconMore, 12, 12)
 SPRITE(kIconShop, 12, 12)
 SPRITE(kIconAlbum, 12, 12)
+SPRITE(kIconLanguage, 12, 12)
 SPRITE(kIconArrowUp, 12, 12)
 SPRITE(kIconArrowDown, 12, 12)
 SPRITE(kIconDot, 12, 12)
@@ -915,6 +931,7 @@ constexpr const Sprite* kAll[] = {
     &kIconMoreSprite,
     &kIconShopSprite,
     &kIconAlbumSprite,
+    &kIconLanguageSprite,
     &kIconArrowUpSprite,
     &kIconArrowDownSprite,
     &kIconDotSprite,

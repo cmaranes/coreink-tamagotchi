@@ -119,6 +119,10 @@ bool load(void* data, size_t len) {
 
 void save(const void* data, size_t len) { gPrefs.putBytes("state", data, len); }
 
+uint8_t loadSetting(const char* key, uint8_t fallback) { return gPrefs.getUChar(key, fallback); }
+
+void saveSetting(const char* key, uint8_t value) { gPrefs.putUChar(key, value); }
+
 int batteryPercent() { return M5.Power.getBatteryLevel(); }
 
 bool charging() { return M5.Power.isCharging() == m5::Power_Class::is_charging_t::is_charging; }

@@ -3,8 +3,12 @@
 #include <stdio.h>
 
 #include "../hal/timeutil.h"
+#include "i18n.h"
 
 namespace ui {
+
+using i18n::Str;
+using i18n::tr;
 
 namespace {
 
@@ -19,7 +23,8 @@ const sprites::Sprite* const kMenuIcons[] = {
     &sprites::kIconCleanSprite,    &sprites::kIconMedicineSprite, &sprites::kIconScoldSprite,
     &sprites::kIconMoreSprite,
 };
-const char* const kMenuLabels[] = {"Comer", "Jugar", "Luz", "Lavar", "Cura", "Regañar", "Más"};
+const Str kMenuLabels[] = {Str::MenuFeed,  Str::MenuPlay,  Str::MenuLight, Str::MenuClean,
+                           Str::MenuCure,  Str::MenuScold, Str::MenuMore};
 
 const sprites::Sprite* const kItemIcons[] = {
     &sprites::kMacaronSprite, &sprites::kEggSoupSprite, &sprites::kFrogSprite,
@@ -64,7 +69,7 @@ const sprites::Sprite& petSprite(pet::Stage st) {
   }
 }
 
-// Font0 only has ASCII glyphs, so Spanish characters are drawn from these
+// Font0 only has ASCII glyphs, so accented characters are drawn from these
 // 5x8 bitmaps in the same style (Font0 cells are 6x8 including spacing).
 struct Glyph {
   uint16_t unicode;
@@ -207,7 +212,7 @@ void drawMenu(M5Canvas& c, const View& v) {
       // highlight in ink and may overhang the neighbouring (empty) space.
       c.fillRoundRect(slotX + 1, kMenuY + 3, kSlotW - 2, 33, 5, INK);
       color = PAPER;
-      text(c, kMenuLabels[i], slotX + kSlotW / 2, kMenuY + 38, 1, top_center);
+      text(c, tr(kMenuLabels[i]), slotX + kSlotW / 2, kMenuY + 38, 1, top_center);
     }
     SpriteOpts o;
     o.color = color;
@@ -337,15 +342,15 @@ void drawHome(M5Canvas& c, const View& v) {
   }
 
   if (v.poweredOff) {
-    drawBubble(c, s.asleep ? "zzz..." : "¡adiós!", fg, dark ? INK : PAPER);
+    drawBubble(c, tr(s.asleep ? Str::SleepZzz : Str::Bye), fg, dark ? INK : PAPER);
   } else if (v.message) {
     drawBubble(c, v.message, fg, dark ? INK : PAPER);
   }
 
   if (v.poweredOff) {
     c.drawFastHLine(0, kMenuY, kWidth, INK);
-    text(c, "pulsa el dial o el botón", kWidth / 2, kMenuY + 12, 1, top_center);
-    text(c, "superior para despertarme", kWidth / 2, kMenuY + 26, 1, top_center);
+    text(c, tr(Str::WakeHint1), kWidth / 2, kMenuY + 12, 1, top_center);
+    text(c, tr(Str::WakeHint2), kWidth / 2, kMenuY + 26, 1, top_center);
   } else {
     drawMenu(c, v);
   }
@@ -396,11 +401,11 @@ void drawStats(M5Canvas& c, const View& v) {
   drawStatusBar(c, v);
 
   char buf[32];
-  snprintf(buf, sizeof(buf), "%s  #%u", pet::stageName(s.stage), (unsigned)s.generation);
+  snprintf(buf, sizeof(buf), "%s  #%u", i18n::stageName(s.stage), (unsigned)s.generation);
   text(c, buf, 6, 26, 2, top_left);
   const uint32_t days = s.ageMinutes / (24 * 60);
   const uint32_t hours = s.ageMinutes / 60 % 24;
-  snprintf(buf, sizeof(buf), "Edad %ud %uh  Peso %ug", (unsigned)days, (unsigned)hours,
+  snprintf(buf, sizeof(buf), tr(Str::AgeWeightFmt), (unsigned)days, (unsigned)hours,
            (unsigned)s.weight);
   text(c, buf, 6, 46, 1, top_left);
 
@@ -409,8 +414,9 @@ void drawStats(M5Canvas& c, const View& v) {
   struct Bar {
     const char* label;
     float value;
-  } bars[] = {{"Comida", s.fullness},  {"Alegría", s.happiness}, {"Energía", s.energy},
-              {"Limpieza", s.hygiene}, {"Salud", s.health},      {"Disciplina", s.discipline}};
+  } bars[] = {{tr(Str::StatFood), s.fullness},   {tr(Str::StatFun), s.happiness},
+              {tr(Str::StatEnergy), s.energy},   {tr(Str::StatClean), s.hygiene},
+              {tr(Str::StatHealth), s.health},   {tr(Str::StatDiscipline), s.discipline}};
   int y = 58;
   for (const auto& b : bars) {
     text(c, b.label, 3, y + 3, 1, top_left);
@@ -419,10 +425,10 @@ void drawStats(M5Canvas& c, const View& v) {
     c.fillRect(68, y + 2, w, 9, INK);
     y += 16;
   }
-  snprintf(buf, sizeof(buf), "Descuidos: %u", (unsigned)s.careMistakes);
+  snprintf(buf, sizeof(buf), tr(Str::MistakesFmt), (unsigned)s.careMistakes);
   text(c, buf, 6, y + 3, 1, top_left);
-  if (s.sick) text(c, "ENFERMO", 194, y + 3, 1, top_right);
-  text(c, "botón superior: volver", kWidth / 2, kHeight - 12, 1, top_center);
+  if (s.sick) text(c, tr(Str::Sick), 194, y + 3, 1, top_right);
+  text(c, tr(Str::TopButtonBack), kWidth / 2, kHeight - 12, 1, top_center);
 }
 
 void drawDead(M5Canvas& c, const View& v) {
@@ -431,21 +437,21 @@ void drawDead(M5Canvas& c, const View& v) {
   drawStatusBar(c, v);
   const sprites::Sprite& ghost = sprites::kGhostSprite;
   drawSprite(c, ghost, (kWidth - ghost.w * 3) / 2, v.altFrame ? 22 : 25, 3);
-  text(c, "D.E.P.", kWidth / 2, 98, 3, top_center);
+  text(c, tr(Str::Rip), kWidth / 2, 98, 3, top_center);
   char buf[40];
-  snprintf(buf, sizeof(buf), "%s, %u días", pet::stageName(s.lastStage),
+  snprintf(buf, sizeof(buf), tr(Str::DaysFmt), i18n::stageName(s.lastStage),
            (unsigned)(s.ageMinutes / (24 * 60)));
   text(c, buf, kWidth / 2, 128, 1, top_center);
-  snprintf(buf, sizeof(buf), "murió de %s", pet::causeName(s.cause));
+  snprintf(buf, sizeof(buf), tr(Str::DiedOfFmt), i18n::causeName(s.cause));
   text(c, buf, kWidth / 2, 142, 1, top_center);
   c.fillRoundRect(30, 166, 140, 24, 6, INK);
-  text(c, "pulsa: nuevo huevo", kWidth / 2, 174, 1, top_center, PAPER);
+  text(c, tr(Str::PressNewEgg), kWidth / 2, 174, 1, top_center, PAPER);
 }
 
 void drawLeftRight(M5Canvas& c, const View& v, const games::LeftRight& g, bool reveal) {
   c.fillSprite(PAPER);
   drawStatusBar(c, v);
-  text(c, "¿Izquierda o derecha?", kWidth / 2, kPetTop + 5, 1, top_center);
+  text(c, tr(Str::LeftOrRight), kWidth / 2, kPetTop + 5, 1, top_center);
 
   const sprites::Sprite& spr = petSprite(v.pet->stage);
   const int scale = 3;
@@ -479,16 +485,16 @@ void drawLeftRight(M5Canvas& c, const View& v, const games::LeftRight& g, bool r
 
   c.drawFastHLine(0, kMenuY, kWidth, INK);
   drawSprite(c, sprites::kIconArrowUpSprite, 14, kMenuY + 12, 2);
-  text(c, "izquierda", 42, kMenuY + 20, 1, top_left);
+  text(c, tr(Str::Left), 42, kMenuY + 20, 1, top_left);
   drawSprite(c, sprites::kIconArrowDownSprite, 104, kMenuY + 12, 2);
-  text(c, "derecha", 132, kMenuY + 20, 1, top_left);
+  text(c, tr(Str::Right), 132, kMenuY + 20, 1, top_left);
 }
 
 void drawForce(M5Canvas& c, const View& v, const games::ForceSeq& g, bool showing) {
   c.fillSprite(PAPER);
   drawStatusBar(c, v);
   char buf[24];
-  snprintf(buf, sizeof(buf), "Fuerza - nivel %u", (unsigned)(g.len - rules::kForceStartLen + 1));
+  snprintf(buf, sizeof(buf), tr(Str::ForceLevelFmt), (unsigned)(g.len - rules::kForceStartLen + 1));
   text(c, buf, kWidth / 2, kPetTop + 5, 1, top_center);
 
   const sprites::Sprite& pose = sprites::kForcePoseSprite;
@@ -515,17 +521,17 @@ void drawForce(M5Canvas& c, const View& v, const games::ForceSeq& g, bool showin
 
   c.drawFastHLine(0, kMenuY, kWidth, INK);
   if (showing) {
-    text(c, "¡Memoriza!", kWidth / 2, kMenuY + 16, 2, top_center);
+    text(c, tr(Str::Memorise), kWidth / 2, kMenuY + 16, 2, top_center);
   } else {
-    text(c, "¡Tu turno!", kWidth / 2, kMenuY + 8, 2, top_center);
-    text(c, "arriba / abajo / pulsar", kWidth / 2, kMenuY + 30, 1, top_center);
+    text(c, tr(Str::YourTurn), kWidth / 2, kMenuY + 8, 2, top_center);
+    text(c, tr(Str::UpDownPress), kWidth / 2, kMenuY + 30, 1, top_center);
   }
 }
 
 void drawHighLow(M5Canvas& c, const View& v, const games::HighLow& g, bool reveal) {
   c.fillSprite(PAPER);
   drawStatusBar(c, v);
-  text(c, "¿Mayor o menor?", kWidth / 2, kPetTop + 5, 1, top_center);
+  text(c, tr(Str::HigherOrLower), kWidth / 2, kPetTop + 5, 1, top_center);
 
   // Two cards: the number to beat, and the next one (hidden until revealed).
   constexpr int kCardW = 50, kCardH = 56;
@@ -548,7 +554,7 @@ void drawHighLow(M5Canvas& c, const View& v, const games::HighLow& g, bool revea
     drawSprite(c, spr, (kWidth - spr.w) / 2, cy + 16, 1);
   }
 
-  snprintf(buf, sizeof(buf), "Racha %u (gana con %u)", (unsigned)g.streak,
+  snprintf(buf, sizeof(buf), tr(Str::StreakFmt), (unsigned)g.streak,
            (unsigned)rules::kHighLowWin);
   text(c, buf, kWidth / 2, cy + kCardH + 8, 1, top_center);
 
@@ -564,17 +570,17 @@ void drawHighLow(M5Canvas& c, const View& v, const games::HighLow& g, bool revea
 
   c.drawFastHLine(0, kMenuY, kWidth, INK);
   drawSprite(c, sprites::kIconArrowUpSprite, 14, kMenuY + 12, 2);
-  text(c, "mayor", 42, kMenuY + 20, 1, top_left);
+  text(c, tr(Str::Higher), 42, kMenuY + 20, 1, top_left);
   drawSprite(c, sprites::kIconArrowDownSprite, 104, kMenuY + 12, 2);
-  text(c, "menor", 132, kMenuY + 20, 1, top_left);
+  text(c, tr(Str::Lower), 132, kMenuY + 20, 1, top_left);
 }
 
 void drawTidy(M5Canvas& c, const View& v, const games::Tidy& g, bool reveal) {
   c.fillSprite(PAPER);
   drawStatusBar(c, v);
-  text(c, "Ordena: de menor a mayor", kWidth / 2, kPetTop + 5, 1, top_center);
+  text(c, tr(Str::TidyGoal), kWidth / 2, kPetTop + 5, 1, top_center);
   char buf[24];
-  snprintf(buf, sizeof(buf), "Cambios: %u", (unsigned)g.swaps);
+  snprintf(buf, sizeof(buf), tr(Str::SwapsFmt), (unsigned)g.swaps);
   text(c, buf, kWidth / 2, kPetTop + 17, 1, top_center);
 
   // Piles of folded clothes on a shelf; the one picked up floats above it.
@@ -604,7 +610,7 @@ void drawTidy(M5Canvas& c, const View& v, const games::Tidy& g, bool reveal) {
   c.drawFastHLine(0, kMenuY, kWidth, INK);
   if (reveal) {
     const uint8_t n = games::stars(g);
-    text(c, n == 3 ? "¡Chispa de alegría!" : "¡Ordenado!", kWidth / 2, kMenuY + 6, n == 3 ? 1 : 2,
+    text(c, tr(n == 3 ? Str::SparkOfJoy : Str::Tidied), kWidth / 2, kMenuY + 6, n == 3 ? 1 : 2,
          top_center);
     for (int i = 0; i < 3; ++i) {
       const int x = kWidth / 2 - 40 + i * 28;
@@ -612,8 +618,8 @@ void drawTidy(M5Canvas& c, const View& v, const games::Tidy& g, bool reveal) {
       else c.drawRoundRect(x + 4, kMenuY + 26, 14, 14, 3, INK);
     }
   } else {
-    text(c, "dial: mover", kWidth / 2, kMenuY + 12, 1, top_center);
-    text(c, g.held < 0 ? "pulsar: coger" : "pulsar: cambiar aquí", kWidth / 2, kMenuY + 28, 1,
+    text(c, tr(Str::DialMove), kWidth / 2, kMenuY + 12, 1, top_center);
+    text(c, tr(g.held < 0 ? Str::PressPickUp : Str::PressSwapHere), kWidth / 2, kMenuY + 28, 1,
          top_center);
   }
 }
@@ -622,7 +628,7 @@ void drawJoy(M5Canvas& c, const View& v, const games::Joy& g, bool phase) {
   c.fillSprite(PAPER);
   drawStatusBar(c, v);
   if (phase && g.round == 0) {
-    text(c, "Le dan alegría:", kWidth / 2, kPetTop + 8, 2, top_center);
+    text(c, tr(Str::SparksJoy), kWidth / 2, kPetTop + 8, 2, top_center);
     int k = 0;
     for (uint8_t i = 0; i < rules::kJoyPool; ++i) {
       if (!games::sparksJoy(g, i)) continue;
@@ -631,20 +637,20 @@ void drawJoy(M5Canvas& c, const View& v, const games::Joy& g, bool phase) {
       drawSprite(c, sprites::kHeartSprite, x + 8, 100, 2);
     }
     c.drawFastHLine(0, kMenuY, kWidth, INK);
-    text(c, "¡Memoriza!", kWidth / 2, kMenuY + 16, 2, top_center);
+    text(c, tr(Str::Memorise), kWidth / 2, kMenuY + 16, 2, top_center);
     return;
   }
 
-  text(c, "¿Te da alegría?", kWidth / 2, kPetTop + 5, 1, top_center);
+  text(c, tr(Str::DoesItSparkJoy), kWidth / 2, kPetTop + 5, 1, top_center);
   const uint8_t shown = phase ? g.lastItem : g.item;
   drawSprite(c, *kJoyIcons[shown], (kWidth - 48) / 2, kPetTop + 18, 6);
   if (phase) {
     const sprites::Sprite& mark = g.lastHit ? sprites::kCheckSprite : sprites::kCrossSprite;
     drawSprite(c, mark, kWidth - 48, kPetTop + 30, 3);
-    const char* msg = !g.lastHit                        ? "¡Uy!"
-                      : games::sparksJoy(g, g.lastItem) ? "¡Alegría!"
-                                                        : "¡Gracias, adiós!";
-    text(c, msg, kWidth / 2, kPetTop + 74, 2, top_center);
+    const Str msg = !g.lastHit                        ? Str::Oops
+                    : games::sparksJoy(g, g.lastItem) ? Str::Joy
+                                                      : Str::ThanksBye;
+    text(c, tr(msg), kWidth / 2, kPetTop + 74, 2, top_center);
   }
 
   // One box per round: tick, cross or still empty.
@@ -661,9 +667,9 @@ void drawJoy(M5Canvas& c, const View& v, const games::Joy& g, bool phase) {
 
   c.drawFastHLine(0, kMenuY, kWidth, INK);
   drawSprite(c, sprites::kIconArrowUpSprite, 6, kMenuY + 12, 2);
-  text(c, "me lo quedo", 32, kMenuY + 20, 1, top_left);
+  text(c, tr(Str::KeepIt), 32, kMenuY + 20, 1, top_left);
   drawSprite(c, sprites::kIconArrowDownSprite, 112, kMenuY + 12, 2);
-  text(c, "gracias", 138, kMenuY + 20, 1, top_left);
+  text(c, tr(Str::LetGo), 138, kMenuY + 20, 1, top_left);
 }
 
 void drawDress(M5Canvas& c, const View& v, pet::Hat hat, pet::Neck neck, int row) {
@@ -678,7 +684,9 @@ void drawDress(M5Canvas& c, const View& v, pet::Hat hat, pet::Neck neck, int row
     const char* label;
     const char* value;
   } rows[kDressRows] = {
-      {"Cabeza", pet::hatName(hat)}, {"Cuello", pet::neckName(neck)}, {"¡Listo!", ""}};
+      {tr(Str::Head), i18n::hatName(hat)},
+      {tr(Str::Neck), i18n::neckName(neck)},
+      {tr(Str::Done), ""}};
   for (int i = 0; i < kDressRows; ++i) {
     const int x = 86, y = 28 + i * 40, w = kWidth - x - 6, h = 36;
     const bool sel = i == row;
@@ -694,8 +702,8 @@ void drawDress(M5Canvas& c, const View& v, pet::Hat hat, pet::Neck neck, int row
   }
 
   c.drawFastHLine(0, kMenuY, kWidth, INK);
-  text(c, "dial: elegir", kWidth / 2, kMenuY + 12, 1, top_center);
-  text(c, row < kDressRows - 1 ? "pulsar: cambiar" : "pulsar: ponérselo", kWidth / 2,
+  text(c, tr(Str::DialChoose), kWidth / 2, kMenuY + 12, 1, top_center);
+  text(c, tr(row < kDressRows - 1 ? Str::PressChange : Str::PressPutOn), kWidth / 2,
        kMenuY + 28, 1, top_center);
 }
 
@@ -703,7 +711,7 @@ void drawAlbum(M5Canvas& c, const View& v, const pet::Album& a, int page) {
   c.fillSprite(PAPER);
   drawStatusBar(c, v);
   char buf[32];
-  snprintf(buf, sizeof(buf), "Álbum %d/%d", page + 1, kAlbumPages);
+  snprintf(buf, sizeof(buf), tr(Str::AlbumFmt), page + 1, kAlbumPages);
   text(c, buf, kWidth / 2, kPetTop + 4, 1, top_center);
 
   if (page == 0) {
@@ -714,20 +722,20 @@ void drawAlbum(M5Canvas& c, const View& v, const pet::Album& a, int page) {
       const int y = i < 2 ? 36 : 112;
       if (pet::albumHasAdult(a, st)) {
         drawSprite(c, petSprite(st), cx - 24, y, 2);
-        text(c, pet::stageName(st), cx, y + 52, 1, top_center);
+        text(c, i18n::stageName(st), cx, y + 52, 1, top_center);
       } else {
         drawUnknown(c, cx - 24, y, 48, 48);
         text(c, "???", cx, y + 52, 1, top_center);
       }
     }
   } else if (page == 1) {
-    text(c, "Objetos", 6, 36, 1, top_left);
+    text(c, tr(Str::Items), 6, 36, 1, top_left);
     for (int i = 0; i < pet::kItemCount; ++i) {
       const int x = 8 + i * 38;
       if (a.items >> i & 1) drawSprite(c, *kItemIcons[i], x + 3, 48, 3);
       else drawUnknown(c, x, 46, 30, 28);
     }
-    text(c, "Sucesos", 6, 84, 1, top_left);
+    text(c, tr(Str::Events), 6, 84, 1, top_left);
     for (int i = 0; i < pet::kEventCount; ++i) {
       const int x = 8 + i * 60;
       if (a.events >> i & 1) {
@@ -739,16 +747,16 @@ void drawAlbum(M5Canvas& c, const View& v, const pet::Album& a, int page) {
       }
     }
   } else {
-    text(c, "Récords", 6, 36, 2, top_left);
+    text(c, tr(Str::Records), 6, 36, 2, top_left);
     struct Line {
       const char* label;
       unsigned value, of;
     } lines[] = {
-        {"Fuerza", a.bestForce, rules::kForceMaxLen},
-        {"Izq/Der", a.bestLeftRight, rules::kLeftRightRounds},
-        {"Más/Menos", a.bestHighLow, rules::kHighLowRounds},
-        {"Ordenar", a.bestTidy, 3},
-        {"¿Alegría?", a.bestJoy, rules::kJoyRounds},
+        {tr(Str::GameForce), a.bestForce, rules::kForceMaxLen},
+        {tr(Str::GameLeftRight), a.bestLeftRight, rules::kLeftRightRounds},
+        {tr(Str::GameHighLow), a.bestHighLow, rules::kHighLowRounds},
+        {tr(Str::GameTidy), a.bestTidy, 3},
+        {tr(Str::GameJoy), a.bestJoy, rules::kJoyRounds},
     };
     int y = 60;
     for (const auto& l : lines) {
@@ -757,10 +765,10 @@ void drawAlbum(M5Canvas& c, const View& v, const pet::Album& a, int page) {
       text(c, buf, kWidth - 10, y, 1, top_right);
       y += 16;
     }
-    snprintf(buf, sizeof(buf), "Generación: #%u", (unsigned)v.pet->generation);
+    snprintf(buf, sizeof(buf), tr(Str::GenerationFmt), (unsigned)v.pet->generation);
     text(c, buf, 10, y + 6, 1, top_left);
   }
-  text(c, "dial: página  botón: volver", kWidth / 2, kHeight - 12, 1, top_center);
+  text(c, tr(Str::AlbumHint), kWidth / 2, kHeight - 12, 1, top_center);
 }
 
 }  // namespace ui

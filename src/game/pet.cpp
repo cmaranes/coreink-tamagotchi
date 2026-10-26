@@ -484,63 +484,6 @@ bool needsAttention(const State& s) {
          s.happiness < rules::kNeedThreshold;
 }
 
-const char* stageName(Stage st) {
-  switch (st) {
-    case Stage::Egg: return "Huevo";
-    case Stage::Baby: return "Bebé";
-    case Stage::Child: return "Niño";
-    case Stage::Teen: return "Joven";
-    case Stage::AdultJedi: return "Jedi";
-    case Stage::AdultMando: return "Mandaloriano";
-    case Stage::AdultGloton: return "Glotón";
-    case Stage::AdultGrump: return "Gruñón";
-    case Stage::Dead: return "D.E.P.";
-  }
-  return "?";
-}
-
-const char* causeName(Cause c) {
-  switch (c) {
-    case Cause::Illness: return "enfermedad";
-    case Cause::Starvation: return "hambre";
-    case Cause::Neglect: return "abandono";
-    case Cause::OldAge: return "vejez";
-    default: return "";
-  }
-}
-
-const char* itemName(Item it) {
-  switch (it) {
-    case Item::Macaron: return "Macarón";
-    case Item::EggSoup: return "Huevos";
-    case Item::Frog: return "Rana";
-    case Item::Bacta: return "Bacta";
-    case Item::Knob: return "Bola";
-    default: return "?";
-  }
-}
-
-const char* hatName(Hat h) {
-  switch (h) {
-    case Hat::None: return "Nada";
-    case Hat::Beanie: return "Gorro";
-    case Hat::Crown: return "Corona";
-    case Hat::Bow: return "Lazo";
-    case Hat::Shades: return "Gafas";
-    default: return "?";
-  }
-}
-
-const char* neckName(Neck n) {
-  switch (n) {
-    case Neck::None: return "Nada";
-    case Neck::Scarf: return "Bufanda";
-    case Neck::BowTie: return "Pajarita";
-    case Neck::Necklace: return "Collar";
-    default: return "?";
-  }
-}
-
 void albumUpdate(Album& a, const State& s) {
   const Stage st = s.stage == Stage::Dead ? s.lastStage : s.stage;
   if (isAdult(st)) a.adults |= 1u << adultIndex(st);

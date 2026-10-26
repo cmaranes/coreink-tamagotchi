@@ -129,11 +129,6 @@ Mood mood(const State& s);
 bool isAlive(const State& s);
 // True if something needs the owner (used for beep/LED on wake).
 bool needsAttention(const State& s);
-const char* stageName(Stage st);
-const char* causeName(Cause c);
-const char* itemName(Item it);
-const char* hatName(Hat h);
-const char* neckName(Neck n);
 // Hour of day (0..23) for an epoch time, treating the RTC as local time.
 uint8_t hourOf(uint32_t epoch);
 bool isSleepTime(uint32_t epoch);

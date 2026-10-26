@@ -2,8 +2,8 @@
 .pio/
 .vscode/
 
-# Simulator save file
-sim_save.bin
+# Simulator save and settings
+sim_*.bin
 
 # Misc
 *.bak

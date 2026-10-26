@@ -135,6 +135,26 @@ void save(const void* data, size_t len) {
   fclose(f);
 }
 
+// One file per setting next to the save, e.g. sim_lang.bin.
+uint8_t loadSetting(const char* key, uint8_t fallback) {
+  char path[48];
+  snprintf(path, sizeof(path), "sim_%s.bin", key);
+  FILE* f = fopen(path, "rb");
+  if (!f) return fallback;
+  const int c = fgetc(f);
+  fclose(f);
+  return c == EOF ? fallback : static_cast<uint8_t>(c);
+}
+
+void saveSetting(const char* key, uint8_t value) {
+  char path[48];
+  snprintf(path, sizeof(path), "sim_%s.bin", key);
+  FILE* f = fopen(path, "wb");
+  if (!f) return;
+  fputc(value, f);
+  fclose(f);
+}
+
 int batteryPercent() { return 87; }
 bool charging() { return false; }
 

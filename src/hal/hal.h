@@ -37,6 +37,10 @@ uint32_t millis32();
 bool load(void* data, size_t len);
 void save(const void* data, size_t len);
 
+// Small settings kept apart from the pet save (e.g. "lang").
+uint8_t loadSetting(const char* key, uint8_t fallback);
+void saveSetting(const char* key, uint8_t value);
+
 int batteryPercent();  // -1 if unknown
 bool charging();
 void beep(uint16_t freq, uint32_t ms);

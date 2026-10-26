@@ -6,9 +6,13 @@
 #include "game/minigames.h"
 #include "game/pet.h"
 #include "hal/hal.h"
+#include "ui/i18n.h"
 #include "ui/render.h"
 
 namespace {
+
+using i18n::Str;
+using i18n::tr;
 
 constexpr uint32_t kIdleSleepMs = 45 * 1000;  // awake time without input before power-down
 constexpr uint32_t kSleepSeconds = 15 * 60;  // RTC wake-up interval while "off"
@@ -101,6 +105,7 @@ enum Action : int {
   kOpenShop,
   kOpenStats,
   kOpenAlbum,
+  kNextLanguage,
   // Item actions are the Item index (0 .. kItemCount-1).
 };
 
@@ -141,11 +146,11 @@ ui::View makeView() {
 
 const char* listTitle() {
   switch (gScreen) {
-    case Screen::Feed: return "Comer";
-    case Screen::Cure: return "Cura";
-    case Screen::Games: return "Jugar";
-    case Screen::More: return "Más";
-    case Screen::Shop: return "Tienda";
+    case Screen::Feed: return tr(Str::MenuFeed);
+    case Screen::Cure: return tr(Str::MenuCure);
+    case Screen::Games: return tr(Str::MenuPlay);
+    case Screen::More: return tr(Str::MenuMore);
+    case Screen::Shop: return tr(Str::ListShop);
     default: return "";
   }
 }
@@ -204,7 +209,7 @@ void startNewPet() {
   gScreen = Screen::Home;
   gCursor = 0;
   gPersist.attentionAlerted = false;
-  say("¡Nuevo huevo!");
+  say(tr(Str::NewEgg));
   gFullRefresh = true;
   savePet();
 }
@@ -296,11 +301,11 @@ void showPendingEvent() {
   const pet::Event e = pet::takeEvent(gPet);
   switch (e) {
     case pet::Event::MandoVisit:
-      say("¡Visita de Mando!", &sprites::kMandoSprite, kEventMessageMs);
+      say(tr(Str::EventMando), &sprites::kMandoSprite, kEventMessageMs);
       break;
-    case pet::Event::FrogHop: say("¡Una rana! +2", &sprites::kFrogSprite, kEventMessageMs); break;
+    case pet::Event::FrogHop: say(tr(Str::EventFrog), &sprites::kFrogSprite, kEventMessageMs); break;
     case pet::Event::MacaronTheft:
-      say("¡Robó un macarón!", &sprites::kMacaronSprite, kEventMessageMs);
+      say(tr(Str::EventTheft), &sprites::kMacaronSprite, kEventMessageMs);
       gPose = true;
       break;
     default: return;
@@ -311,7 +316,7 @@ void showPendingEvent() {
 
 void reactTo(pet::Result r, const char* ok, const char* notNeeded, const char* refused,
              const sprites::Sprite* prop = nullptr) {
-  if (gPet.stage == pet::Stage::Egg && r == pet::Result::Refused) refused = "¡Es un huevo!";
+  if (gPet.stage == pet::Stage::Egg && r == pet::Result::Refused) refused = tr(Str::IsEgg);
   switch (r) {
     case pet::Result::Ok: chirp(); say(ok, prop); break;
     case pet::Result::NotNeeded: say(notNeeded); break;
@@ -336,42 +341,43 @@ void openList(Screen s) {
   char buf[8];
   switch (s) {
     case Screen::Feed:
-      addRow("Sopa", &sprites::kFoodSprite, kMeal);
-      addRow("Galleta", &sprites::kCandySprite, kSnack);
+      addRow(tr(Str::RowMeal), &sprites::kFoodSprite, kMeal);
+      addRow(tr(Str::RowSnack), &sprites::kCandySprite, kSnack);
       for (int i = 0; i < pet::kItemCount; ++i) {
         const auto it = static_cast<pet::Item>(i);
         if (it == pet::Item::Bacta || it == pet::Item::Knob || !gPet.items[i]) continue;
         snprintf(buf, sizeof(buf), "x%u", (unsigned)gPet.items[i]);
-        addRow(pet::itemName(it), kItemSprites[i], i, buf);
+        addRow(i18n::itemName(it), kItemSprites[i], i, buf);
       }
       break;
     case Screen::Cure:
-      addRow("Medicina", &sprites::kIconMedicineSprite, kMedicine);
+      addRow(tr(Str::RowMedicine), &sprites::kIconMedicineSprite, kMedicine);
       snprintf(buf, sizeof(buf), "x%u", (unsigned)gPet.items[static_cast<int>(pet::Item::Bacta)]);
-      addRow("Bacta", &sprites::kBactaSprite, static_cast<int>(pet::Item::Bacta), buf);
+      addRow(tr(Str::ItemBacta), &sprites::kBactaSprite, static_cast<int>(pet::Item::Bacta), buf);
       break;
     case Screen::Games:
-      addRow("Izq/Der", &sprites::kIconArrowUpSprite, kLeftRight);
-      addRow("Fuerza", &sprites::kSparkleSprite, kForceGame);
-      addRow("Más/Menos", &sprites::kIconUpDownSprite, kHighLowGame);
-      addRow("Ordenar", &sprites::kIconTidySprite, kTidyGame);
-      addRow("¿Alegría?", &sprites::kHeartSprite, kJoyGame);
-      addRow("Vestir", &sprites::kIconDressSprite, kDressUp);
+      addRow(tr(Str::GameLeftRight), &sprites::kIconArrowUpSprite, kLeftRight);
+      addRow(tr(Str::GameForce), &sprites::kSparkleSprite, kForceGame);
+      addRow(tr(Str::GameHighLow), &sprites::kIconUpDownSprite, kHighLowGame);
+      addRow(tr(Str::GameTidy), &sprites::kIconTidySprite, kTidyGame);
+      addRow(tr(Str::GameJoy), &sprites::kHeartSprite, kJoyGame);
+      addRow(tr(Str::DressUp), &sprites::kIconDressSprite, kDressUp);
       break;
     case Screen::More:
-      addRow("Tienda", &sprites::kIconShopSprite, kOpenShop);
-      addRow("Info", &sprites::kIconStatsSprite, kOpenStats);
-      addRow("Álbum", &sprites::kIconAlbumSprite, kOpenAlbum);
+      addRow(tr(Str::ListShop), &sprites::kIconShopSprite, kOpenShop);
+      addRow(tr(Str::RowStats), &sprites::kIconStatsSprite, kOpenStats);
+      addRow(tr(Str::RowAlbum), &sprites::kIconAlbumSprite, kOpenAlbum);
+      addRow(tr(Str::LangName), &sprites::kIconLanguageSprite, kNextLanguage);
       break;
     case Screen::Shop:
       for (int i = 0; i < pet::kItemCount; ++i) {
         const auto it = static_cast<pet::Item>(i);
         if (it == pet::Item::Knob && gPet.items[i]) {
-          snprintf(buf, sizeof(buf), "ya");
+          snprintf(buf, sizeof(buf), "%s", tr(Str::Owned));
         } else {
           snprintf(buf, sizeof(buf), "%u", (unsigned)rules::kItemPrice[i]);
         }
-        addRow(pet::itemName(it), kItemSprites[i], i, buf);
+        addRow(i18n::itemName(it), kItemSprites[i], i, buf);
       }
       break;
     default: return;
@@ -384,7 +390,7 @@ void openList(Screen s) {
 bool refusesToPlay() {
   if (pet::canPlay(gPet) == pet::Result::Ok) return false;
   goHome();
-  const char* why = gPet.asleep ? "Zzz..." : gPet.sick ? "Estoy malo" : "Quiero siesta";
+  const char* why = tr(gPet.asleep ? Str::Zzz : gPet.sick ? Str::ImSick : Str::WantNap);
   reactTo(pet::Result::Refused, "", "", why);
   return true;
 }
@@ -418,18 +424,18 @@ void finishGame(pet::Game g, uint8_t score) {
   gScreen = Screen::Home;
   gFullRefresh = true;
   if (pet::gameWon(g, score)) {
-    snprintf(gMsgBuf, sizeof(gMsgBuf), "¡Ganaste! +%u", (unsigned)frogs);
+    snprintf(gMsgBuf, sizeof(gMsgBuf), tr(Str::YouWonFmt), (unsigned)frogs);
     chirp();
     say(gMsgBuf, &sprites::kFrogSprite);
   } else {
     buzz();
-    say("¡Otra vez!");
+    say(tr(Str::TryAgain));
   }
   savePet();
 }
 
 void openDress() {
-  if (gPet.asleep) return reactTo(pet::Result::Refused, "", "", "Zzz...");
+  if (gPet.asleep) return reactTo(pet::Result::Refused, "", "", tr(Str::Zzz));
   if (gPet.stage == pet::Stage::Egg) return reactTo(pet::Result::Refused, "", "", "");
   gDressHat = pet::hatOf(gPet);
   gDressNeck = pet::neckOf(gPet);
@@ -449,15 +455,27 @@ void activateListRow() {
     const int keep = gListCursor;
     openList(Screen::Shop);
     gListCursor = keep;
-    return reactTo(r, "¡Comprado!", "Ya lo tienes", "Faltan ranas");
+    return reactTo(r, tr(Str::Bought), tr(Str::HaveIt), tr(Str::NoFrogs));
+  }
+  if (a == kNextLanguage) {
+    // Stay in the list, now in the next language.
+    const int next = (static_cast<int>(i18n::lang()) + 1) % i18n::kLangCount;
+    i18n::setLang(static_cast<i18n::Lang>(next));
+    hal::saveSetting("lang", static_cast<uint8_t>(next));
+    const int keep = gListCursor;
+    openList(Screen::More);
+    gListCursor = keep;
+    chirp();
+    return;
   }
   goHome();
   switch (a) {
     case kMeal:
-      return reactTo(pet::feedMeal(gPet), "¡Ñam!", "Estoy lleno", "¡No!", &sprites::kFoodSprite);
+      return reactTo(pet::feedMeal(gPet), tr(Str::Yum), tr(Str::Full), tr(Str::No),
+                     &sprites::kFoodSprite);
     case kSnack:
-      return reactTo(pet::feedSnack(gPet), "¡Qué rico!", "", "¡No!", &sprites::kCandySprite);
-    case kMedicine: return reactTo(pet::medicine(gPet), "¡Curado!", "No está malo", "");
+      return reactTo(pet::feedSnack(gPet), tr(Str::Tasty), "", tr(Str::No), &sprites::kCandySprite);
+    case kMedicine: return reactTo(pet::medicine(gPet), tr(Str::Cured), tr(Str::NotSick), "");
     case kLeftRight: return startGame(Screen::LeftRight);
     case kForceGame: return startGame(Screen::Force);
     case kHighLowGame: return startGame(Screen::HighLow);
@@ -478,9 +496,9 @@ void activateListRow() {
   }
   if (a >= 0 && a < pet::kItemCount) {
     const auto it = static_cast<pet::Item>(a);
-    const char* ok = it == pet::Item::Bacta ? "¡Como nuevo!" : "¡Qué rico!";
-    const char* notNeeded = it == pet::Item::Bacta ? "Estoy bien" : "Estoy lleno";
-    reactTo(pet::useItem(gPet, it), ok, notNeeded, "¡No!", kItemSprites[a]);
+    const char* ok = tr(it == pet::Item::Bacta ? Str::GoodAsNew : Str::Tasty);
+    const char* notNeeded = tr(it == pet::Item::Bacta ? Str::ImFine : Str::Full);
+    reactTo(pet::useItem(gPet, it), ok, notNeeded, tr(Str::No), kItemSprites[a]);
   }
 }
 
@@ -488,7 +506,7 @@ void activate(ui::MenuItem item) {
   switch (item) {
     case ui::MenuItem::Feed:
       if (gPet.stage == pet::Stage::Egg) return reactTo(pet::Result::Refused, "", "", "");
-      if (gPet.asleep) return reactTo(pet::Result::Refused, "", "", "Zzz...");
+      if (gPet.asleep) return reactTo(pet::Result::Refused, "", "", tr(Str::Zzz));
       openList(Screen::Feed);
       break;
     case ui::MenuItem::Play:
@@ -498,27 +516,27 @@ void activate(ui::MenuItem item) {
       const bool wasNapping = gPet.napping;
       const bool wasAsleep = gPet.asleep;
       const pet::Result r = pet::toggleLights(gPet);
-      const char* ok = gPet.napping                ? "¡A la siesta!"
-                       : gPet.nightAwake           ? "¡Uaah! ¿Qué pasa?"
-                       : wasNapping                ? "¡Ya despierto!"
-                       : !wasAsleep && gPet.asleep ? "¡Buenas noches!"
-                       : gPet.lightsOff            ? "Luz apagada"
-                                                   : "Luz encendida";
-      reactTo(r, ok, "", "");
+      const Str ok = gPet.napping                ? Str::NapTime
+                     : gPet.nightAwake           ? Str::WokenUp
+                     : wasNapping                ? Str::AwakeNow
+                     : !wasAsleep && gPet.asleep ? Str::GoodNight
+                     : gPet.lightsOff            ? Str::LightsOff
+                                                 : Str::LightsOn;
+      reactTo(r, tr(ok), "", "");
       break;
     }
     case ui::MenuItem::Clean:
-      reactTo(pet::clean(gPet), "¡Limpito!", "Ya está limpio", "");
+      reactTo(pet::clean(gPet), tr(Str::Clean), tr(Str::AlreadyClean), "");
       break;
     case ui::MenuItem::Medicine:
       if (gPet.items[static_cast<int>(pet::Item::Bacta)] && gPet.stage != pet::Stage::Egg) {
         openList(Screen::Cure);
       } else {
-        reactTo(pet::medicine(gPet), "¡Curado!", "No está malo", "");
+        reactTo(pet::medicine(gPet), tr(Str::Cured), tr(Str::NotSick), "");
       }
       break;
     case ui::MenuItem::Scold:
-      reactTo(pet::scold(gPet), "¡Vale...!", "¿Por qué?", gPet.asleep ? "Zzz..." : "");
+      reactTo(pet::scold(gPet), tr(Str::ScoldOk), tr(Str::ScoldWhy), gPet.asleep ? tr(Str::Zzz) : "");
       break;
     case ui::MenuItem::More: openList(Screen::More); break;
     default: break;
@@ -590,7 +608,8 @@ void handleDress(hal::Event e) {
     } else {
       gScreen = Screen::Home;
       gFullRefresh = true;
-      reactTo(pet::dress(gPet, gDressHat, gDressNeck), "¡Qué guapo!", "¡Me gusta!", "Zzz...");
+      reactTo(pet::dress(gPet, gDressHat, gDressNeck), tr(Str::LookGood), tr(Str::LikeIt),
+              tr(Str::Zzz));
     }
   }
   gDirty = true;
@@ -708,7 +727,7 @@ void update() {
         gScreen = Screen::Dead;
       } else {
         gScreen = Screen::Home;
-        say(before == pet::Stage::Egg ? "¡Nació!" : "¡Creció!");
+        say(tr(before == pet::Stage::Egg ? Str::Hatched : Str::GrewUp));
       }
     }
     checkAttention();
@@ -738,6 +757,7 @@ void update() {
 
 void setup() {
   hal::begin();
+  i18n::setLang(static_cast<i18n::Lang>(hal::loadSetting("lang", 0)));
   ui::initCanvas(gCanvas);
   loadPet();
   // RTC lost power (or the simulator restarted after fast-forwarding):

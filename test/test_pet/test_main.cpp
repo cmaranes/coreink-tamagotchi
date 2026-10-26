@@ -6,6 +6,7 @@
 #include "../../src/game/pet.h"
 #include "../../src/game/rules.h"
 #include "../../src/hal/timeutil.h"
+#include "../../src/ui/i18n.h"
 #include "../../src/ui/sprites.h"
 
 using namespace pet;
@@ -708,6 +709,52 @@ void test_sprite_rows_have_correct_width() {
   }
 }
 
+// The printf conversions of a string, e.g. "%u%s" for "%u days of %s".
+static void formatSpecs(const char* s, char* out, size_t n) {
+  size_t k = 0;
+  for (; *s; ++s) {
+    if (*s != '%') continue;
+    ++s;
+    while (*s && strchr("0123456789.-+ #l", *s)) ++s;
+    if (!*s) break;
+    if (k + 2 < n) {
+      out[k++] = '%';
+      out[k++] = *s;
+    }
+  }
+  out[k] = '\0';
+}
+
+void test_every_language_has_every_string() {
+  for (int l = 0; l < i18n::kLangCount; ++l) {
+    for (int i = 0; i < static_cast<int>(i18n::Str::Count); ++i) {
+      const char* s = i18n::tr(static_cast<i18n::Str>(i), static_cast<i18n::Lang>(l));
+      TEST_ASSERT_NOT_NULL(s);
+      TEST_ASSERT_TRUE_MESSAGE(s[0] != '\0', i18n::tr(static_cast<i18n::Str>(i), i18n::Lang::En));
+    }
+  }
+}
+
+void test_translations_keep_format_specifiers() {
+  for (int i = 0; i < static_cast<int>(i18n::Str::Count); ++i) {
+    const auto id = static_cast<i18n::Str>(i);
+    char want[16], got[16];
+    formatSpecs(i18n::tr(id, i18n::Lang::En), want, sizeof(want));
+    for (int l = 1; l < i18n::kLangCount; ++l) {
+      formatSpecs(i18n::tr(id, static_cast<i18n::Lang>(l)), got, sizeof(got));
+      TEST_ASSERT_EQUAL_STRING_MESSAGE(want, got, i18n::tr(id, i18n::Lang::En));
+    }
+  }
+}
+
+void test_language_switch() {
+  i18n::setLang(i18n::Lang::Es);
+  TEST_ASSERT_EQUAL_STRING("Bebé", i18n::stageName(pet::Stage::Baby));
+  i18n::setLang(static_cast<i18n::Lang>(200));  // corrupt setting
+  TEST_ASSERT_TRUE(i18n::lang() == i18n::Lang::En);
+  TEST_ASSERT_EQUAL_STRING("Baby", i18n::stageName(pet::Stage::Baby));
+}
+
 int main(int, char**) {
   UNITY_BEGIN();
   RUN_TEST(test_egg_hatches);
@@ -743,5 +790,8 @@ int main(int, char**) {
   RUN_TEST(test_save_roundtrip_and_corruption);
   RUN_TEST(test_time_roundtrip);
   RUN_TEST(test_sprite_rows_have_correct_width);
+  RUN_TEST(test_every_language_has_every_string);
+  RUN_TEST(test_translations_keep_format_specifiers);
+  RUN_TEST(test_language_switch);
   return UNITY_END();
 }
