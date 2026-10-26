@@ -1,0 +1,11 @@
+# PlatformIO build output and IDE files
+.pio/
+.vscode/
+
+# Simulator save file
+sim_save.bin
+
+# Misc
+*.bak
+Thumbs.db
+.DS_Store
